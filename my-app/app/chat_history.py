@@ -1,22 +1,11 @@
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
-from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_core.runnables import RunnableWithMessageHistory
-from langserve import add_routes
-from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
-
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.agents.output_parsers import JSONAgentOutputParser
-from langchain.globals import set_debug, set_verbose
-from langchain_core.runnables import ConfigurableFieldSpec
-from agent_schema import AgentInput, AgentOutput
-from tool.google_search_tool import google_search
-from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.messages import HumanMessage
-from langchain_core.runnables import RunnableConfig
-
 from dotenv import load_dotenv
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_community.chat_message_histories import RedisChatMessageHistory
+from langchain_core.runnables import ConfigurableFieldSpec
+from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables import RunnableWithMessageHistory
+from langchain_openai import ChatOpenAI
+import os
 
 load_dotenv()
 
@@ -29,19 +18,14 @@ chat_prompt = ChatPromptTemplate.from_messages([
 model = ChatOpenAI(model="deepseek-chat")
 chain = chat_prompt | model
 
-store = {}
-
-
-def get_session_history(user_id: str, conversation_id: str) -> BaseChatMessageHistory:
+def get_session_history(user_id: str, conversation_id: str) -> RedisChatMessageHistory:
     """
         获取历史消息
     :param user_id
     :param conversation_id
     :return:
     """
-    if (user_id, conversation_id) not in store:
-        store[(user_id, conversation_id)] = ChatMessageHistory()
-    return store[(user_id, conversation_id)]
+    return RedisChatMessageHistory(session_id=f"{user_id}:{conversation_id}", url=os.getenv("REDIS_URL"))
 
 
 with_message_history = RunnableWithMessageHistory(chain, get_session_history, input_messages_key='question',
@@ -64,23 +48,16 @@ with_message_history = RunnableWithMessageHistory(chain, get_session_history, in
                                                           is_shared=True
                                                       )
                                                   ])
-# 调用with_message_history
-response = with_message_history.invoke(
-    {"question": "什么是余弦函数"},
-    config=RunnableConfig(configurable={"user_id": "abc2", "conversation_id": "abc2"})
-)
-print(response)
 
-# 调用with_message_history
-response1 = with_message_history.invoke(
-    {"question": "没听懂"},
-    config=RunnableConfig(configurable={"user_id": "abc2", "conversation_id": "abc2"})
-)
-print(response1)
+print("开始多轮对话！输入 'exit' 来结束对话。")
 
-# 调用with_message_history
-response2 = with_message_history.invoke(
-    {"question": "没听懂"},
-    config=RunnableConfig(configurable={"user_id": "abc2", "conversation_id": "11111"})
-)
-print(response2)
+while True:
+    user_input = input("你: ")
+    if user_input.lower() == 'exit':
+        break
+
+    response = with_message_history.invoke(
+        {"question": f"{user_input}"},
+        config=RunnableConfig(configurable={"user_id": "00001", "conversation_id": "00001"})
+    )
+    print(response)
