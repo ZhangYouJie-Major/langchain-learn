@@ -6,6 +6,7 @@ from langchain.prompts import PromptTemplate
 
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain.agents.output_parsers import JSONAgentOutputParser
+from langchain.globals import set_debug,set_verbose
 from agent_schema import AgentInput, AgentOutput
 from tool.google_search_tool import google_search
 from dotenv import load_dotenv
@@ -47,6 +48,7 @@ tools = [google_search]
 
 agent = create_react_agent(model, tools, agent_prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+set_debug(True)
 
 # 创建链：提示模板 + LLM
 chain = chat_prompt | model
