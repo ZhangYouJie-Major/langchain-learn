@@ -1,2 +1,49 @@
-  __pycache__/
-  *.pyc
+# Environments
+.env
+.venv
+venv/
+env/
+ENV/
+env.bak
+.env.bak
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# IDE and editor directories
+.idea/
+.vscode/
+.cursor/
+
+# Build and distribution
+/build/
+/dist/
+/downloads/
+/eggs/
+/*.egg-info/
+/site/
+/sdist/
+/var/
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+/htmlcov/
+nosetests.xml
+coverage.xml
+
+# Notebooks
+.ipynb_checkpoints
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
